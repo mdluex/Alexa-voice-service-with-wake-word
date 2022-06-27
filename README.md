@@ -3,7 +3,7 @@ Install AVS on the Raspberry Pi with the wake word and enable it at startup.
 
 Here is how
 
-### 1ST  increasing the swap size:
+## 1ST  increasing the swap size:
 
 Enter the following commands into the terminal
 
@@ -19,7 +19,7 @@ Enter the following commands into the terminal
 
 ------
 
-### 2ND installing the Amazone Alexa Voice Service:
+## 2ND installing the Amazone Alexa Voice Service:
 
 "If you use bullseye os on a raspberry pi, you may encounter some errors; therefore, I recommend using buster os, which is more stable."
 
@@ -27,7 +27,7 @@ Enter the following commands into the terminal
 
 ------
 
-### 3RD sitting up the wake word:
+## 3RD sitting up the wake word:
 
 1. [Create a Pico Voice account and copy your Access Key from this link](https://console.picovoice.ai/)
 
