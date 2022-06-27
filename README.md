@@ -1,4 +1,4 @@
-# Alexa-voice-service-with-wake-word
+# Alexa Voice Service with wake word for Raspberry Pi
 Install AVS on the Raspberry Pi with the wake word and enable it at startup.
 
 Here is how
