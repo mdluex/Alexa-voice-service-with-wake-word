@@ -49,6 +49,8 @@ wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/alex
 
 9. Reboot the device ```sudo reboot```
 
+* To control your Alexa or change settings such as language and location, you can go to the [Amazon Alexa website](https://alexa.amazon.com/) or download the Amazon Alexa mobile app for Android or iOS.
+
 10. Everything should work after rebooting; however, you cannot use the device through the GUI while our script is running because it is emulating keyboard presses.
 
 ## Thank you, and please accept my apologies for the poor documentation.
