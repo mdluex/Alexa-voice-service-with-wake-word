@@ -13,9 +13,10 @@ from threading import Thread
 import pvporcupine
 from pvrecorder import PvRecorder
 
-
+startSound= 'startup.wav'
 keyboard = Controller()
 subprocess.Popen(['sudo', '/home/pi/startsample.sh'])
+os.system("aplay " + startSound)
 
 
 class PorcupineDemo(Thread):
