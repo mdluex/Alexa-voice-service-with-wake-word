@@ -17,9 +17,13 @@ Enter the following commands into the terminal
 
 5. Reboot the device ```sudo reboot```
 
+------
+
 ### 2ND installing the Amazone Alexa Voice Service:
 
 [Open this link and follow the instructions](https://developer.amazon.com/en-US/docs/alexa/avs-device-sdk/raspberry-pi-script.html)
+
+------
 
 ### 3RD sitting up the wake word:
 
