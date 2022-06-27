@@ -9,7 +9,7 @@ Enter the following commands into the terminal
 
 1. ```sudo dphys-swapfile swapoff```
 
-2. ```sudo mousepad /etc/dphys-swapfile``` and change ```CONF_SWAPSIZE=100``` to ```CONF_SWAPSIZE=1024```
+2. ```sudo nano /etc/dphys-swapfile``` and change ```CONF_SWAPSIZE=100``` to ```CONF_SWAPSIZE=1024``` then save the file
 
 3. ```sudo dphys-swapfile setup```
 
@@ -44,13 +44,13 @@ wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/star
 
 3. Install python requirements ```sudo python3 -m pip install -r requirements.txt```
 
-4. Edit the runAlexa.sh file to include your Pico Voice access key ```sudo mousepad runAlexa.sh```
+4. Edit the runAlexa.sh file to include your Pico Voice access key ```sudo nano runAlexa.sh```
 
 5. Change the runAlexa.sh file permissions ```sudo chmod +x runAlexa.sh```
 
 6. Change the startsample.sh file permissions ```sudo chmod +x startsample.sh```
 
-7. Adding our script to run at stratup ```sudo mousepad /etc/xdg/lxsession/LXDE-pi/autostart```
+7. Adding our script to run at stratup ```sudo nano /etc/xdg/lxsession/LXDE-pi/autostart```
 
 8. Add this line ```@lxterminal --command="./runAlexa.sh"``` before this line ```@xscreensaver -no-splash``` and save the file
 
