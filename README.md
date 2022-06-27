@@ -21,6 +21,8 @@ Enter the following commands into the terminal
 
 ### 2ND installing the Amazone Alexa Voice Service:
 
+"If you use bullseye os on a raspberry pi, you may encounter some errors; therefore, I recommend using buster os, which is more stable."
+
 [Open this link and follow the instructions](https://developer.amazon.com/en-US/docs/alexa/avs-device-sdk/raspberry-pi-script.html)
 
 ------
