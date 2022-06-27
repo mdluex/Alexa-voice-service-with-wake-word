@@ -23,5 +23,17 @@ Type these commands in the terminal
 
 1. [Make account on Pico Voice website and copy your Access Key from this link](https://console.picovoice.ai/)
 
-2. 
+2. Open terminal and type these commands
+
+```
+cd /home/pi/ \
+wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/wword.py \
+wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/runAlexa.sh \
+wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/alexa_en_raspberry-pi_v2_1_0.ppn?raw=true
+```
+
+3. Edit runAlexa.sh file and add your Pico Voice access key
+
+```sudo mousepad runAlexa.sh```
+
 
