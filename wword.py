@@ -15,7 +15,7 @@ from pvrecorder import PvRecorder
 
 startSound= 'startup.wav'
 keyboard = Controller()
-subprocess.Popen(['sudo', '/home/pi/startsample.sh'])
+subprocess.Popen(['sudo', './startsample.sh'])
 os.system("aplay " + startSound)
 
 
