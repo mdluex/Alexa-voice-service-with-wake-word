@@ -1,3 +1,2 @@
-pynput
 pvporcupine
 pvrecorder
