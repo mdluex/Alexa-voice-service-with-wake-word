@@ -1,6 +1,4 @@
 import subprocess
-import pynput
-from pynput.keyboard import Key, Controller
 import argparse
 import os
 import time
@@ -14,8 +12,7 @@ import pvporcupine
 from pvrecorder import PvRecorder
 
 startSound= 'startup.wav'
-keyboard = Controller()
-subprocess.Popen(['sudo', './startsample.sh'])
+alexa = subprocess.Popen(['sudo ./startsample.sh'], stdin= subprocess.PIPE, shell= True)
 os.system("aplay " + startSound)
 
 
@@ -109,18 +106,16 @@ class PorcupineDemo(Thread):
                 result = porcupine.process(pcm)
                 if result >= 0:
                     print('[%s] Detected %s' % (str(datetime.now()), keywords[result]))
-                    keyboard.press('t')
-                    keyboard.press(Key.enter)
-                    keyboard.release('t')
-                    keyboard.release(Key.enter)
+                    alexa.stdin.write(b't\n')
+                    alexa.stdin.flush()
+                    time.sleep(0.25)
 
 
 
         except KeyboardInterrupt:
-            keyboard.press('q')
-            keyboard.press(Key.enter)
-            keyboard.release('q')
-            keyboard.release(Key.enter)
+            alexa.stdin.write(b'q\n')
+            alexa.stdin.flush()
+            time.sleep(0.25)
             print('Stopping ...')
         finally:
             if porcupine is not None:
