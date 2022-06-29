@@ -37,27 +37,29 @@ Enter the following commands into the terminal
 cd /home/pi/ \
 wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/requirements.txt \
 wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/wword.py \
-wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/runAlexa.sh \
+wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/runAlexa \
 wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/alexa_en_raspberry-pi_v2_1_0.ppn \
 wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/startup.wav
 ```
 
 3. Install python requirements ```sudo python3 -m pip install -r requirements.txt```
 
-4. Edit the runAlexa.sh file to include your Pico Voice access key ```sudo nano runAlexa.sh```
+4. Edit the runAlexa file to include your Pico Voice access key ```sudo nano runAlexa```
 
-5. Change the runAlexa.sh file permissions ```sudo chmod +x runAlexa.sh```
+5. Change the runAlexa file permissions ```sudo chmod +x runAlexa```
 
 6. Change the startsample.sh file permissions ```sudo chmod +x startsample.sh```
 
 7. Adding our script to run at stratup ```sudo nano /etc/xdg/lxsession/LXDE-pi/autostart```
 
-8. Add this line ```@lxterminal --command="./runAlexa.sh"``` before this line ```@xscreensaver -no-splash``` and save the file
+8. Add this line ```@bash ./runAlexa``` before everything in this file and save the file
 
 9. Reboot the device ```sudo reboot```
 
+10. Everything should work after rebooting.
+
 * To control your Alexa or change settings such as language and location, you can go to the [Amazon Alexa website](https://alexa.amazon.com/) or download the Amazon Alexa mobile app for Android or iOS.
 
-10. Everything should work after rebooting; however, you cannot use the device through the GUI while our script is running because it is emulating keyboard presses.
+
 
 ## Thank you, and please accept my apologies for the poor documentation.
