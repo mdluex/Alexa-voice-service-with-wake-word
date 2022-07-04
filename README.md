@@ -38,8 +38,8 @@ cd /home/pi/ \
 wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/requirements.txt \
 wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/wword.py \
 wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/runAlexa \
-wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/alexa_en_raspberry-pi_v2_1_0.ppn \
-wget https://github.com/mdluex/Alexa-voice-service-with-wake-word/blob/main/startup.wav
+wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/alexa_en_raspberry-pi_v2_1_0.ppn \
+wget https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/startup.wav
 ```
 
 3. Install python requirements ```sudo python3 -m pip install -r requirements.txt```
