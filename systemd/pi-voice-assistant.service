@@ -1,0 +1,21 @@
+[Unit]
+Description=Pi Voice Assistant (wake word)
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+WorkingDirectory=@REPO_ROOT@
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=@REPO_ROOT@
+EnvironmentFile=-@CONFIG_DIR@/config.env
+ExecStart=@VENV_DIR@/bin/python -m pi_voice_assistant --env-file @CONFIG_DIR@/config.env
+Restart=on-failure
+RestartSec=5
+# Access to audio devices on Raspberry Pi OS typically requires the 'audio' group.
+SupplementaryGroups=audio
+
+[Install]
+WantedBy=multi-user.target
