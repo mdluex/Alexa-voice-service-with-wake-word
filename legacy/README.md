@@ -14,9 +14,10 @@ this project and requires a paid AccessKey. The default wake-word engine is
 **openWakeWord** (`pyopen-wakeword`), which includes a built-in `alexa` model
 and needs no AccessKey.
 
-## Legacy AVS path
+## AVS path (now the default again)
 
 Amazon archived the [AVS Device SDK](https://github.com/alexa/avs-device-sdk) on
-2024-01-16. AVS developer tools are no longer generally available for new Alexa
-Built-in devices. The optional `BACKEND=avs` mode only helps existing SampleApp
-installs that still accept tap-to-talk (`t`) on stdin.
+2024-01-16 and states AVS tools are no longer generally available for new Alexa
+Built-in devices. This repository still defaults to SampleApp because it remains
+the closest official Amazon software that produces a real Alexa on a Pi.
+Use `./install.sh` and see `docs/AMAZON_AVS.md`.

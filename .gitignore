@@ -3,6 +3,9 @@
 config.env
 *.env.local
 **/secrets*
+config.json
+**/avs-sdk/config.json
+**/AlexaClientSDKConfig.json
 
 # Python
 __pycache__/

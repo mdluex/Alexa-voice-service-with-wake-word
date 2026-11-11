@@ -10,11 +10,15 @@ from .shell_command import ShellCommandBackend
 
 
 def create_backend(settings: Settings) -> AssistantBackend:
-    if settings.backend == "conversation":
-        return ConversationBackend(settings)
     if settings.backend == "avs":
         assert settings.avs_start_script is not None
-        return AvsSampleAppBackend(settings.avs_start_script)
+        return AvsSampleAppBackend(
+            start_script=settings.avs_start_script,
+            working_directory=settings.avs_working_directory,
+            log_directory=settings.avs_log_directory,
+        )
+    if settings.backend == "conversation":
+        return ConversationBackend(settings)
     if settings.backend == "command":
         assert settings.shell_command is not None
         return ShellCommandBackend(settings.shell_command)

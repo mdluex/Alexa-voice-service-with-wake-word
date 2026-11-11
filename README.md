@@ -1,129 +1,118 @@
-# Alexa-style Voice Assistant for Raspberry Pi
+# Real Amazon Alexa on a Raspberry Pi
 
-A wake-word voice assistant for Raspberry Pi OS. Say a wake word (default **“Alexa”**), then speak a short request and get a spoken reply.
+Turn a Raspberry Pi into a **genuine Alexa Built-in device**: wake on **“Alexa”**, talk to Amazon’s Alexa Voice Service, and manage the device from the official Alexa mobile app after Login with Amazon authorization.
 
-This repository modernizes the 2022 project that glued [Picovoice Porcupine](https://picovoice.ai/) to Amazon’s AVS Device SDK SampleApp. That stack is no longer a viable default in 2026:
+## One-command install
 
-| Component (2022) | Status in 2026 | Replacement in this repo |
-| --- | --- | --- |
-| Amazon AVS Device SDK / SampleApp | [Archived](https://github.com/alexa/avs-device-sdk) (2024-01-16). AVS tools are not generally available for new Alexa Built-in devices. | Default **conversation** backend (local listen → STT → reply → TTS). Optional legacy `BACKEND=avs` for existing SampleApp installs only. |
-| Picovoice Porcupine | Still maintained, but **free-tier AccessKeys stopped working after 2026-06-30**. | Default wake engine: **openWakeWord** via [`pyopen-wakeword`](https://pypi.org/project/pyopen-wakeword/) (includes a built-in `alexa` model, no AccessKey). Optional Porcupine for paid keys. |
-| LXDE `autostart` | Not reliable on Bookworm (Wayland / labwc). | **systemd** service |
-| Raspberry Pi OS Buster guidance | Obsolete | Raspberry Pi OS **Bookworm**, Python **3.11+** |
+```bash
+curl -fsSL https://raw.githubusercontent.com/mdluex/Alexa-voice-service-with-wake-word/main/install.sh | bash
+```
 
-## Features
-
-- Always-listening wake word (default: openWakeWord `alexa`)
-- Pluggable backends: conversation (default), legacy AVS SampleApp, or a shell command
-- Configuration via environment / `config.env` (no secrets committed)
-- systemd unit for start-on-boot
-- Install script with pinned Python dependencies
-- Basic unit tests and GitHub Actions CI (lint + pytest)
-
-## Hardware
-
-- Raspberry Pi 3 / 4 / 5 (Bookworm 64-bit recommended; Pi 4/5 preferred)
-- USB microphone (or HAT with capture support)
-- Speaker (3.5 mm, HDMI, or USB)
-- Network connection (needed for Google Web Speech STT and optional OpenAI / weather)
-
-## Quick start
+Or, after cloning:
 
 ```bash
 git clone https://github.com/mdluex/Alexa-voice-service-with-wake-word.git
 cd Alexa-voice-service-with-wake-word
-chmod +x scripts/*.sh
-./scripts/install.sh
+./install.sh
 ```
 
-Edit configuration:
+`./install.sh` installs system packages, the wake-word daemon, builds Amazon’s AVS Device SDK SampleApp, writes `/etc/pi-voice-assistant/config.env`, walks you through Amazon authorization, and enables the systemd start-on-boot service.
 
-```bash
-sudo nano /etc/pi-voice-assistant/config.env
-```
+**Interactive only where Amazon requires it:**
 
-Validate and do a foreground run:
+1. Paste / provide AVS `config.json` (or Client ID + Product ID from the Amazon developer console)
+2. Complete Login with Amazon Code-Based Linking in a browser (`https://amazon.com/us/code`)
 
-```bash
-source ~/.venvs/pi-voice-assistant/bin/activate
-export PYTHONPATH="$PWD"
-python -m pi_voice_assistant --list-audio-devices
-python -m pi_voice_assistant --env-file /etc/pi-voice-assistant/config.env --validate-config
-python -m pi_voice_assistant --env-file /etc/pi-voice-assistant/config.env
-```
+> **Amazon availability:** AVS developer tools are [no longer generally available](https://developer.amazon.com/en-US/alexa/alexa-voice-service) for new Alexa Built-in products. The SDK is [archived](https://github.com/alexa/avs-device-sdk) (last release v3.0.0). This repo uses that archived official SampleApp because it is still the closest Amazon-published path that yields a **real Alexa** (not a Google-STT/OpenAI clone). New console registrations may fail — details in [`docs/AMAZON_AVS.md`](docs/AMAZON_AVS.md).
 
-Enable start on boot:
+## What this is
 
-```bash
-./scripts/install-service.sh
-```
+| Piece | Choice |
+| --- | --- |
+| Wake word | openWakeWord (`alexa`) — free/open; Porcupine optional (paid) |
+| Voice assistant | **Amazon AVS Device SDK SampleApp** (default) |
+| Boot | systemd `pi-voice-assistant.service` |
+| Config | `/etc/pi-voice-assistant/config.env` (no secrets in git) |
+
+On wake, the daemon sends tap-to-talk (`t`) to SampleApp. SampleApp streams audio to Alexa and plays the reply. After CBL authorization, the device is linked to your Amazon account.
+
+Optional fallbacks (`BACKEND=conversation` or `command`) exist for bring-up without AVS; they are **not** real Alexa.
+
+## Hardware
+
+- Raspberry Pi 3 / 4 / 5 (Bookworm 64-bit recommended; Pi 4/5 preferred)
+- USB microphone (or capture HAT)
+- Speaker (3.5 mm, HDMI, or USB)
+- Network connection
+
+## Amazon developer console (before or during install)
+
+Full step-by-step: [`docs/AMAZON_AVS.md`](docs/AMAZON_AVS.md).
+
+Summary:
+
+1. Sign in at [developer.amazon.com](https://developer.amazon.com/)
+2. If still available to your account, register an AVS / Alexa Built-in product and Login with Amazon security profile
+3. Download `config.json` (`clientId`, `productId`) — keep it private
+4. Run `./install.sh` and point it at that file (or paste the IDs when prompted)
+5. When SampleApp shows a code, open [amazon.com/us/code](https://amazon.com/us/code), Allow, wait until Alexa is idle
+6. Use the [Alexa app](https://www.amazon.com/alexa-app/b?ie=UTF8&node=18354642011) / [alexa.amazon.com](https://alexa.amazon.com/) with the same Amazon account
+
+Official / historical references:
+
+- [Alexa Built-in / AVS overview](https://developer.amazon.com/en-US/alexa/alexa-voice-service) (includes “no longer generally available” notice)
+- [AVS FAQs](https://developer.amazon.com/en-US/docs/alexa/alexa-voice-service/faqs.html)
+- [avs-device-sdk (archived)](https://github.com/alexa/avs-device-sdk)
+- [Raspberry Pi Quick Start (SDK wiki)](https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script)
+- [Works with Alexa](https://developer.amazon.com/en-US/alexa/works-with-alexa) — **not** Alexa Built-in; for devices Alexa controls
 
 ## Configuration
 
-Copy [`config.example.env`](config.example.env) to `config.env` or `/etc/pi-voice-assistant/config.env`. Important variables:
+Primary file: `/etc/pi-voice-assistant/config.env` (see [`config.example.env`](config.example.env)).
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
+| `BACKEND` | `avs` | `avs` (real Alexa), optional `conversation` / `command` |
+| `AVS_START_SCRIPT` | `~/avs-sdk/startsample.sh` | SampleApp launcher from `install-avs-sdk.sh` |
 | `WAKE_ENGINE` | `openwakeword` | `openwakeword` or `porcupine` |
-| `WAKE_MODEL` | `alexa` | Built-in openWakeWord model name |
-| `WAKE_THRESHOLD` | `0.5` | Detection threshold (0–1) |
-| `AUDIO_DEVICE` | *(default mic)* | Device index/name from `--list-audio-devices` |
-| `BACKEND` | `conversation` | `conversation`, `avs`, or `command` |
-| `LISTEN_SECONDS` | `5.0` | How long to record after wake (conversation) |
-| `TTS_COMMAND` | `espeak-ng` | Local TTS binary |
-| `OPENAI_API_KEY` | *(unset)* | Optional richer answers |
-| `AVS_START_SCRIPT` | *(unset)* | Legacy SampleApp `startsample.sh` |
-| `SHELL_COMMAND` | *(unset)* | Command to run when `BACKEND=command` |
-| `PORCUPINE_ACCESS_KEY` | *(unset)* | Required only for `WAKE_ENGINE=porcupine` |
+| `WAKE_MODEL` | `alexa` | openWakeWord model name |
+| `WAKE_THRESHOLD` | `0.5` | Detection threshold |
+| `AUDIO_DEVICE` | default mic | From `--list-audio-devices` |
 
-Built-in openWakeWord models: `alexa`, `hey_jarvis`, `hey_mycroft`, `okay_nabu`, `hey_rhasspy`.
-
-### Conversation backend
-
-After the wake word:
-
-1. Speaks a short acknowledgment (“Yes?”)
-2. Records `LISTEN_SECONDS` of audio
-3. Transcribes with SpeechRecognition (Google Web Speech by default)
-4. Answers with local intents (time, date, hello, weather) or OpenAI when `OPENAI_API_KEY` is set
-5. Speaks the reply through `espeak-ng`
-
-### Legacy AVS backend
-
-Only for machines that already have a working AVS SampleApp:
-
-```env
-BACKEND=avs
-AVS_START_SCRIPT=/home/pi/sdk-folder/startsample.sh
-```
-
-On wake, the daemon writes `t\n` to SampleApp stdin (tap-to-talk). New AVS setups are not supported.
-
-### Optional Porcupine
+## Manual / advanced commands
 
 ```bash
-INSTALL_PORCUPINE=1 ./scripts/install.sh
+# Python daemon only (no AVS build)
+./scripts/install.sh
+
+# Build SampleApp from an existing config.json
+./scripts/install-avs-sdk.sh /secure/path/to/config.json
+
+# One-time Amazon authorization
+./scripts/authorize-avs.sh
+
+# Enable/restart boot service
+./scripts/install-service.sh
+
+# Validate config
+source ~/.venvs/pi-voice-assistant/bin/activate
+export PYTHONPATH="$PWD"
+python -m pi_voice_assistant --env-file /etc/pi-voice-assistant/config.env --validate-config
 ```
 
-```env
-WAKE_ENGINE=porcupine
-PORCUPINE_ACCESS_KEY=your-paid-key
-PORCUPINE_KEYWORD_PATHS=/path/to/keyword_raspberry-pi.ppn
-PORCUPINE_SENSITIVITIES=0.6
-```
-
-The `.ppn` file from the 2022 project lives under [`legacy/`](legacy/) for historical reference. Regenerate keyword models for your Porcupine version before use.
+Installer knobs: `SKIP_AVS_BUILD=1`, `SKIP_AUTHORIZE=1`, `SKIP_SERVICE=1`, `AVS_DIR=...`, `AVS_CONFIG_JSON=/path/to/config.json`.
 
 ## Project layout
 
 ```
-pi_voice_assistant/     Python package (daemon, wake engines, backends)
-scripts/                install.sh, install-service.sh
-systemd/                service unit template
-assets/startup.wav      boot / ready chime
-config.example.env      configuration template
-legacy/                 old Porcupine keyword + notes
-tests/                  unit tests
+install.sh                 One-command installer
+pi_voice_assistant/        Wake-word daemon (Python)
+scripts/                   install.sh, install-avs-sdk.sh, authorize-avs.sh, install-service.sh
+systemd/                   service unit template
+docs/AMAZON_AVS.md         Amazon console + AVS status
+assets/startup.wav         Ready chime
+config.example.env         Config template
+tests/                     Unit tests
 ```
 
 ## Development
@@ -138,22 +127,21 @@ ruff check pi_voice_assistant tests
 
 ## Troubleshooting
 
-| Symptom | Things to check |
+| Symptom | Check |
 | --- | --- |
-| No wake detections | Mic levels (`arecord -l`, `alsamixer`); try `--list-audio-devices` and set `AUDIO_DEVICE`; lower `WAKE_THRESHOLD` slightly (for example `0.4`). |
-| Service dies on boot | `sudo journalctl -u pi-voice-assistant -xe`; ensure the service user is in the `audio` group: `sudo usermod -aG audio $USER`. |
-| STT always fails | Needs outbound HTTPS for Google Web Speech; check DNS/network. |
-| TTS silent | Confirm `espeak-ng` is installed and speakers work (`speaker-test -c2`). |
-| Porcupine activation errors | Free-tier keys no longer work; use a paid AccessKey or switch back to `WAKE_ENGINE=openwakeword`. |
-| Old LXDE autostart | Remove `@bash ./runAlexa` from any leftover LXDE autostart files; use systemd instead. |
+| Console won’t create an AVS product | Amazon closed new AVS tools; see `docs/AMAZON_AVS.md` |
+| SampleApp build fails on Bookworm | SDK unmaintained since 2024; inspect `~/avs-sdk` build logs; `PLATFORM="Raspberry pi"` is forced by the installer |
+| NOT YET AUTHORIZED | Run `./scripts/authorize-avs.sh` and finish `amazon.com/us/code` |
+| No wake detections | `arecord -l`, `--list-audio-devices`, lower `WAKE_THRESHOLD` |
+| Service fails | `sudo journalctl -u pi-voice-assistant -xe`; user in `audio` group |
 
 ## Limitations
 
-- This is **not** an official Alexa Built-in product. Amazon no longer offers AVS developer tools for new DIY Alexa devices.
-- Default speech recognition uses a cloud STT endpoint (Google Web Speech via SpeechRecognition).
-- Default TTS (`espeak-ng`) is robotic; swap `TTS_COMMAND` for another local engine if you prefer.
-- Conversation quality without `OPENAI_API_KEY` is limited to simple built-in intents.
-- Wake-word and full duplex audio were **not** hardware-tested in CI (no Raspberry Pi or Amazon credentials in the modernization environment).
+- Not an Amazon-certified commercial Alexa Built-in product.
+- Depends on the **archived** AVS Device SDK; builds and cloud access are best-effort.
+- New AVS product registration may be impossible.
+- First authorization must use a browser (Amazon CBL).
+- Hardware, Amazon credentials, SampleApp build, CBL, and Alexa-app visibility were **not** verified in the cloud agent environment used to prepare this repo.
 
 ## License
 

@@ -75,7 +75,8 @@ class Settings:
     wake_cooldown_seconds: float = 2.0
     audio_device: str | None = None
     sample_rate: int = 16000
-    backend: str = "conversation"
+    # Default: real Amazon Alexa via AVS Device SDK SampleApp.
+    backend: str = "avs"
     startup_sound: Path = field(default_factory=lambda: REPO_ROOT / "assets" / "startup.wav")
     play_startup_sound: bool = True
 
@@ -87,8 +88,12 @@ class Settings:
     porcupine_keyword_paths: tuple[Path, ...] = ()
     porcupine_sensitivities: tuple[float, ...] = (0.5,)
 
-    # Backends
+    # AVS SampleApp (real Alexa)
     avs_start_script: Path | None = None
+    avs_working_directory: Path | None = None
+    avs_log_directory: Path | None = None
+
+    # Optional non-Alexa fallbacks
     shell_command: str | None = None
     listen_seconds: float = 5.0
     openai_api_key: str | None = None
@@ -120,7 +125,10 @@ class Settings:
         ).expanduser()
 
         model_path_raw = os.getenv("OPENWAKEWORD_MODEL_PATH", "").strip()
-        avs_script_raw = os.getenv("AVS_START_SCRIPT", "").strip()
+        default_avs_script = Path.home() / "avs-sdk" / "startsample.sh"
+        avs_script_raw = os.getenv("AVS_START_SCRIPT", str(default_avs_script)).strip()
+        avs_cwd_raw = os.getenv("AVS_WORKING_DIRECTORY", "").strip()
+        avs_log_raw = os.getenv("AVS_LOG_DIRECTORY", "").strip()
         audio_device = os.getenv("AUDIO_DEVICE", "").strip() or None
 
         return cls(
@@ -130,7 +138,7 @@ class Settings:
             wake_cooldown_seconds=_env_float("WAKE_COOLDOWN_SECONDS", 2.0),
             audio_device=audio_device,
             sample_rate=_env_int("SAMPLE_RATE", 16000),
-            backend=os.getenv("BACKEND", "conversation").strip().lower(),
+            backend=os.getenv("BACKEND", "avs").strip().lower(),
             startup_sound=startup_sound,
             play_startup_sound=_env_bool("PLAY_STARTUP_SOUND", True),
             openwakeword_model_path=Path(model_path_raw).expanduser() if model_path_raw else None,
@@ -138,6 +146,8 @@ class Settings:
             porcupine_keyword_paths=keyword_paths,
             porcupine_sensitivities=sensitivities,
             avs_start_script=Path(avs_script_raw).expanduser() if avs_script_raw else None,
+            avs_working_directory=Path(avs_cwd_raw).expanduser() if avs_cwd_raw else None,
+            avs_log_directory=Path(avs_log_raw).expanduser() if avs_log_raw else None,
             shell_command=os.getenv("SHELL_COMMAND") or None,
             listen_seconds=_env_float("LISTEN_SECONDS", 5.0),
             openai_api_key=os.getenv("OPENAI_API_KEY") or None,
@@ -152,10 +162,10 @@ class Settings:
                 f"Unsupported WAKE_ENGINE={self.wake_engine!r}. "
                 "Use 'openwakeword' (default) or 'porcupine'."
             )
-        if self.backend not in {"conversation", "avs", "command"}:
+        if self.backend not in {"avs", "conversation", "command"}:
             raise ValueError(
                 f"Unsupported BACKEND={self.backend!r}. "
-                "Use 'conversation', 'avs', or 'command'."
+                "Use 'avs' (real Amazon Alexa, default), 'conversation', or 'command'."
             )
         if not 0.0 < self.wake_threshold <= 1.0:
             raise ValueError("WAKE_THRESHOLD must be between 0 and 1.")
