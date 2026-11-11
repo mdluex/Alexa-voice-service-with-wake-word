@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pi-voice-assistant"
+version = "2.0.0"
+description = "Wake-word voice assistant for Raspberry Pi"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mahmoud Salah" }]
+dependencies = [
+  "pyopen-wakeword==1.1.0",
+  "numpy>=1.24.0,<3",
+  "sounddevice==0.5.6",
+  "SpeechRecognition==3.17.0",
+  "python-dotenv==1.2.4",
+]
+
+[project.optional-dependencies]
+porcupine = [
+  "pvporcupine==4.0.3",
+  "pvrecorder==1.2.7",
+]
+dev = [
+  "pytest==9.2.0",
+  "ruff==0.17.4",
+]
+
+[project.scripts]
+pi-voice-assistant = "pi_voice_assistant.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["pi_voice_assistant*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

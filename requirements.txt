@@ -1,2 +1,6 @@
-pvporcupine
-pvrecorder
+# Pinned for Raspberry Pi OS Bookworm / Python 3.11+
+pyopen-wakeword==1.1.0
+numpy>=1.24.0,<3
+sounddevice==0.5.6
+SpeechRecognition==3.17.0
+python-dotenv==1.2.4

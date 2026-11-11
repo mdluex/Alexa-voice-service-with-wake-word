@@ -1,0 +1,5 @@
+# Optional: Picovoice Porcupine wake-word engine
+# Free-tier AccessKeys stopped working after 2026-06-30. A paid AccessKey is required.
+# Keyword .ppn files are version/platform specific — regenerate in Picovoice Console.
+pvporcupine==4.0.3
+pvrecorder==1.2.7

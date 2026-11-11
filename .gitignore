@@ -1,0 +1,35 @@
+# Secrets and local config
+.env
+config.env
+*.env.local
+**/secrets*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.envrc
+
+# Test / lint
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local models / recordings
+models/
+recordings/
+*.wav.bak
