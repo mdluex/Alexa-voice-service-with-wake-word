@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # One-command installer: real Amazon Alexa (AVS SampleApp) + wake word on Raspberry Pi.
 #
+# Official AVS Device SDK references used by this installer:
+#   https://alexa.github.io/avs-device-sdk/
+#   https://github.com/alexa/avs-device-sdk/wiki/Home/66a5d4ef1b19a1faf1fede5ecb922a18426a6938
+#   https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script
+#   https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide
+#
+# Builds the latest AVS Device SDK release tag: v3.0.0
+#
 # Recommended (clone then install):
 #   git clone https://github.com/mdluex/Alexa-voice-service-with-wake-word.git
 #   cd Alexa-voice-service-with-wake-word
@@ -18,6 +26,7 @@
 #   SKIP_AUTHORIZE=1     Skip interactive CBL authorization
 #   SKIP_SERVICE=1       Skip enabling systemd
 #   AVS_DIR=~/avs-sdk    SampleApp install directory
+#   AVS_SDK_VERSION=v3.0.0
 #   REPO_URL=...         Override git clone URL for curl|bash
 set -euo pipefail
 
@@ -111,15 +120,18 @@ ensure_avs_config_json() {
     echo "Client ID and Product ID are required." >&2
     exit 1
   fi
+  # Official wiki shape: deviceInfo.clientId / deviceInfo.productId
+  # https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide
   python3 - "$dest" "$client_id" "$product_id" <<'PY'
 import json, sys
 path, client_id, product_id = sys.argv[1], sys.argv[2], sys.argv[3]
+payload = {"deviceInfo": {"clientId": client_id, "productId": product_id}}
 with open(path, "w", encoding="utf-8") as fh:
-    json.dump({"clientId": client_id, "productId": product_id}, fh, indent=2)
+    json.dump(payload, fh, indent=2)
     fh.write("\n")
 PY
   chmod 600 "$dest"
-  echo "==> Wrote $dest (permissions 600)"
+  echo "==> Wrote $dest (official deviceInfo format, permissions 600)"
 }
 
 write_config_env() {

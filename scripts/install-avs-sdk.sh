@@ -1,22 +1,30 @@
 #!/usr/bin/env bash
-# Build Amazon's archived AVS Device SDK SampleApp on a Raspberry Pi.
+# Build the latest AVS Device SDK release (v3.0.0) SampleApp on a Raspberry Pi.
 #
-# Official sources (archived / no longer generally available for new products):
-#   https://github.com/alexa/avs-device-sdk
-#   https://developer.amazon.com/en-US/alexa/alexa-voice-service
+# Primary official guides (follow these):
+#   https://alexa.github.io/avs-device-sdk/
+#   https://github.com/alexa/avs-device-sdk/wiki/Home/66a5d4ef1b19a1faf1fede5ecb922a18426a6938
 #   https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script
+#   https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide
+#
+# This wrapper mirrors the wiki "Quick Start Guide with Script" flow
+# (setup.sh + pi.sh + config), pinning the SDK clone to the latest GitHub
+# release tag: v3.0.0 (2022-09-29). The repo is archived; Amazon states AVS
+# tools are no longer generally available for new Alexa Built-in products.
 #
 # Usage:
 #   ./scripts/install-avs-sdk.sh /path/to/config.json
 #
-# config.json comes from the Amazon developer console after registering an
-# Alexa Built-in / AVS product (Client ID + Product ID). Never commit it.
+# config.json must match the official deviceInfo shape from the wiki:
+#   { "deviceInfo": { "clientId": "...", "productId": "..." } }
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_USER="${SUDO_USER:-${USER}}"
 HOME_DIR="$(getent passwd "$INSTALL_USER" | cut -d: -f6)"
 AVS_DIR="${AVS_DIR:-$HOME_DIR/avs-sdk}"
+# Latest AVS Device SDK release on GitHub (also the final release).
+AVS_SDK_VERSION="${AVS_SDK_VERSION:-v3.0.0}"
 CONFIG_JSON="${1:-}"
 
 if [[ -z "$CONFIG_JSON" ]]; then
@@ -26,9 +34,17 @@ Usage: $0 /path/to/config.json
 Obtain config.json from the Amazon developer console when registering an AVS /
 Alexa Built-in product (Login with Amazon security profile + Product ID).
 
-IMPORTANT: Amazon states that AVS developer tools are "no longer generally
-available" for Alexa Built-in. New product registration may be blocked.
-See docs/AMAZON_AVS.md.
+Official shape (Raspberry Pi Quick Start Guide):
+  {
+    "deviceInfo": {
+      "clientId": "amzn1.application-oa2-client....",
+      "productId": "YourProductId"
+    }
+  }
+
+See docs/AMAZON_AVS.md and:
+  https://alexa.github.io/avs-device-sdk/
+  https://github.com/alexa/avs-device-sdk/wiki/Home/66a5d4ef1b19a1faf1fede5ecb922a18426a6938
 
 EOF
   exit 1
@@ -39,52 +55,94 @@ if [[ ! -f "$CONFIG_JSON" ]]; then
   exit 1
 fi
 
-# Validate required keys without printing secrets.
-python3 - "$CONFIG_JSON" <<'PY'
-import json, sys
-path = sys.argv[1]
-with open(path, encoding="utf-8") as fh:
+# Normalize + validate config.json into the official deviceInfo shape.
+NORMALIZED_CONFIG="$(mktemp)"
+python3 - "$CONFIG_JSON" "$NORMALIZED_CONFIG" <<'PY'
+import json
+import re
+import sys
+
+src, dst = sys.argv[1], sys.argv[2]
+with open(src, encoding="utf-8") as fh:
     data = json.load(fh)
-missing = [k for k in ("clientId", "productId") if not data.get(k)]
-if missing:
-    raise SystemExit(f"config.json missing required keys: {', '.join(missing)}")
-print(f"config.json OK (productId={data['productId']!r})")
+
+device = data.get("deviceInfo") if isinstance(data.get("deviceInfo"), dict) else data
+client_id = device.get("clientId") or device.get("clientID")
+product_id = device.get("productId") or device.get("productID")
+if not client_id or not product_id:
+    raise SystemExit(
+        "config.json must include deviceInfo.clientId and deviceInfo.productId "
+        "(official AVS wiki format)."
+    )
+if not re.fullmatch(r"amzn1\.application-oa2-client\.[0-9a-z]{32}", client_id):
+    print(
+        "WARNING: clientId does not match genConfig.sh expected pattern "
+        "amzn1.application-oa2-client.<32 hex chars>. Continuing anyway.",
+        file=sys.stderr,
+    )
+if not re.fullmatch(r"[0-9a-zA-Z_]+", product_id):
+    raise SystemExit("productId must be alphanumeric/underscore (no spaces).")
+
+normalized = {"deviceInfo": {"clientId": client_id, "productId": product_id}}
+with open(dst, "w", encoding="utf-8") as fh:
+    json.dump(normalized, fh, indent=2)
+    fh.write("\n")
+print(f"config.json OK (productId={product_id!r})")
 PY
 
-echo "==> Preparing AVS build directory: $AVS_DIR"
+echo "==> Preparing AVS build directory: $AVS_DIR (SDK $AVS_SDK_VERSION)"
 mkdir -p "$AVS_DIR"
-cp "$CONFIG_JSON" "$AVS_DIR/config.json"
+cp "$NORMALIZED_CONFIG" "$AVS_DIR/config.json"
 chmod 600 "$AVS_DIR/config.json"
+rm -f "$NORMALIZED_CONFIG"
 
-echo "==> Fetching Amazon AVS Device SDK install scripts (archived GitHub)"
+echo "==> Fetching official Install scripts from alexa/avs-device-sdk@$AVS_SDK_VERSION"
 cd "$AVS_DIR"
-BASE="https://raw.githubusercontent.com/alexa/avs-device-sdk/v3.0.0/tools/Install"
+BASE="https://raw.githubusercontent.com/alexa/avs-device-sdk/${AVS_SDK_VERSION}/tools/Install"
 for f in setup.sh pi.sh genConfig.sh; do
-  if [[ ! -f "$f" ]]; then
-    wget -O "$f" "$BASE/$f"
-  fi
+  wget -O "$f" "$BASE/$f"
   chmod +x "$f"
 done
 
-echo "==> Installing common build dependencies (Bookworm)"
+# Pin the SDK source clone to the latest release tag (setup.sh otherwise clones
+# the default branch tip). Matches "build against the latest AVS Device SDK release".
+if ! grep -q 'git clone --single-branch \$CLONE_URL avs-device-sdk' setup.sh \
+  && ! grep -q 'git clone --single-branch $CLONE_URL avs-device-sdk' setup.sh; then
+  echo "Unexpected setup.sh clone line; refusing to patch." >&2
+  grep -n "git clone" setup.sh || true
+  exit 1
+fi
+sed -i \
+  's|git clone --single-branch $CLONE_URL avs-device-sdk|git clone --branch '"${AVS_SDK_VERSION}"' --single-branch "$CLONE_URL" avs-device-sdk|' \
+  setup.sh
+
+echo "==> Installing dependencies (wiki Raspberry Pi guide + Bookworm extras)"
+# From wiki Raspberry Pi Quick Start Guide + packages required by pi.sh/setup.sh.
 sudo apt-get update
 sudo apt-get install -y \
-  git gcc cmake build-essential \
-  libsqlite3-dev libssl-dev libnghttp2-dev libfaad-dev \
+  git gcc cmake build-essential doxygen \
+  libsqlite3-dev libcurl4-openssl-dev libssl-dev libnghttp2-dev libfaad-dev \
   libsoup2.4-dev libgcrypt20-dev \
   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+  libgstreamer-plugins-bad1.0-dev \
   gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
-  libasound2-dev sox wget curl
+  libasound2-dev sox wget curl python3
 
-# Modern Raspberry Pi OS often reports ID=debian, but Amazon's setup.sh only
-# auto-detects ID=raspbian. Force the Raspberry Pi platform path.
+# commentjson is used by some SDK config tooling (manual Pi guide).
+python3 -m pip install --user commentjson || true
+
+# Modern Raspberry Pi OS often reports ID=debian; Amazon setup.sh only auto-detects
+# ID=raspbian. Force the Raspberry Pi platform path from pi.sh.
 export PLATFORM="Raspberry pi"
+export CLONE_URL="${CLONE_URL:-https://github.com/alexa/avs-device-sdk.git}"
 
 cat <<EOF
 
-About to run Amazon's archived setup.sh.
-This build can take a long time on a Pi and may fail on current Bookworm
-toolchains because the SDK has been unmaintained since 2024-01-16.
+About to run Amazon's official setup.sh from $AVS_SDK_VERSION
+(Raspberry Pi Quick Start Guide with Script flow).
+
+This can take a long time. The SDK has been archived since 2024-01-16; Bookworm
+builds may need manual fixes.
 
 Amazon's installer asks you to type AGREE for third-party dependency terms.
 This script answers AGREE automatically so ./install.sh can stay one-command.
@@ -92,14 +150,17 @@ Review: https://github.com/alexa/avs-device-sdk/wiki/Dependencies
 
 EOF
 
-# setup.sh expects to be run from AVS_DIR with config.json as the first argument.
-# Pipe AGREE for the External Dependencies prompt (non-interactive install).
 printf 'AGREE\n' | bash ./setup.sh "$AVS_DIR/config.json"
 
 if [[ ! -x "$AVS_DIR/startsample.sh" ]]; then
   echo "ERROR: startsample.sh was not created in $AVS_DIR" >&2
+  echo "See the official guides:" >&2
+  echo "  https://alexa.github.io/avs-device-sdk/" >&2
+  echo "  https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script" >&2
   exit 1
 fi
+
+echo "$AVS_SDK_VERSION" > "$AVS_DIR/AVS_SDK_VERSION"
 
 CONFIG_ENV="${CONFIG_ENV:-/etc/pi-voice-assistant/config.env}"
 if [[ -f "$CONFIG_ENV" ]]; then
@@ -112,7 +173,6 @@ if [[ -f "$CONFIG_ENV" ]]; then
   fi
 fi
 
-# Also update local repo config.env if present
 if [[ -f "$REPO_ROOT/config.env" ]]; then
   sed -i 's/^BACKEND=.*/BACKEND=avs/' "$REPO_ROOT/config.env" || true
   if grep -q '^AVS_START_SCRIPT=' "$REPO_ROOT/config.env"; then
@@ -124,17 +184,16 @@ fi
 
 cat <<EOF
 
-AVS SampleApp build finished (if setup.sh succeeded).
+AVS Device SDK $AVS_SDK_VERSION SampleApp build finished (if setup.sh succeeded).
 
-Next:
-  1. Authorize the device to your Amazon account (one-time, interactive):
-       $REPO_ROOT/scripts/authorize-avs.sh
-  2. Confirm AVS_START_SCRIPT in config.env points to:
-       $AVS_DIR/startsample.sh
-  3. Run the wake-word daemon (or enable the systemd service).
+Official docs:
+  https://alexa.github.io/avs-device-sdk/
+  https://github.com/alexa/avs-device-sdk/wiki/Home/66a5d4ef1b19a1faf1fede5ecb922a18426a6938
 
-After CBL authorization, the Pi is linked to your Amazon account as an AVS /
-Alexa Built-in client and should be manageable from the Alexa mobile app /
-alexa.amazon.com for that account.
+Next (wiki Authorize and run):
+  1. $REPO_ROOT/scripts/authorize-avs.sh
+  2. Open https://amazon.com/us/code , enter the code, Allow
+  3. Wait until SampleApp reports Alexa is idle
+  4. Enable boot via ./scripts/install-service.sh (or ./install.sh)
 
 EOF

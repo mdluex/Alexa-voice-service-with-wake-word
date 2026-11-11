@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # First-time Amazon AVS SampleApp authorization (Code-Based Linking / CBL).
 #
-# Official flow (historical AVS Device SDK docs / wiki):
+# Official flow from the AVS Device SDK Raspberry Pi guides:
 #   1. Start SampleApp
 #   2. When it prints NOT YET AUTHORIZED + a code, open https://amazon.com/us/code
 #   3. Sign in with the Amazon account that owns the Alexa app
 #   4. Enter the code and Allow
-#   5. Wait until SampleApp reports Alexa is idle
+#   5. Wait until SampleApp reports Authorized / Alexa is idle
 #
 # References:
+#   https://alexa.github.io/avs-device-sdk/
+#   https://github.com/alexa/avs-device-sdk/wiki/Home/66a5d4ef1b19a1faf1fede5ecb922a18426a6938
 #   https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script
-#   https://developer.amazon.com/en-US/docs/alexa/avs-device-sdk/authorization.html
-#     (pages may redirect; Amazon banners state AVS tools are no longer generally available)
+#   https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide
 set -euo pipefail
 
 INSTALL_USER="${SUDO_USER:-${USER}}"

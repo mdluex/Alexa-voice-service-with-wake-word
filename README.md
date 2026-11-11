@@ -16,29 +16,43 @@ cd Alexa-voice-service-with-wake-word
 ./install.sh
 ```
 
-`./install.sh` installs system packages, the wake-word daemon, builds Amazon’s AVS Device SDK SampleApp, writes `/etc/pi-voice-assistant/config.env`, walks you through Amazon authorization, and enables the systemd start-on-boot service.
+`./install.sh` installs system packages, the wake-word daemon, builds the **latest AVS Device SDK release (`v3.0.0`) SampleApp** using Amazon’s official Raspberry Pi install scripts, writes `/etc/pi-voice-assistant/config.env`, walks you through Amazon authorization, and enables the systemd start-on-boot service.
 
 **Interactive only where Amazon requires it:**
 
 1. Paste / provide AVS `config.json` (or Client ID + Product ID from the Amazon developer console)
 2. Complete Login with Amazon Code-Based Linking in a browser (`https://amazon.com/us/code`)
 
-> **Amazon availability:** AVS developer tools are [no longer generally available](https://developer.amazon.com/en-US/alexa/alexa-voice-service) for new Alexa Built-in products. The SDK is [archived](https://github.com/alexa/avs-device-sdk) (last release v3.0.0). This repo uses that archived official SampleApp because it is still the closest Amazon-published path that yields a **real Alexa** (not a Google-STT/OpenAI clone). New console registrations may fail — details in [`docs/AMAZON_AVS.md`](docs/AMAZON_AVS.md).
+## Official Amazon / AVS Device SDK docs (primary guide)
+
+This project follows Amazon’s AVS Device SDK documentation and Raspberry Pi quick starts:
+
+| Resource | URL |
+| --- | --- |
+| **AVS Device SDK docs (API / overview)** | https://alexa.github.io/avs-device-sdk/ |
+| **SDK wiki Home** | https://github.com/alexa/avs-device-sdk/wiki/Home/66a5d4ef1b19a1faf1fede5ecb922a18426a6938 |
+| **Raspberry Pi Quick Start Guide with Script** | https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script |
+| **Raspberry Pi Quick Start Guide (manual)** | https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide |
+| **SDK source / releases** | https://github.com/alexa/avs-device-sdk (latest release **v3.0.0**) |
+
+> **Amazon availability:** The public AVS landing page states that AVS developer tools are [no longer generally available](https://developer.amazon.com/en-US/alexa/alexa-voice-service) for new Alexa Built-in products, and the GitHub SDK is [archived](https://github.com/alexa/avs-device-sdk) (2024-01-16). This repo still targets the latest published SDK release (**v3.0.0**) and the wiki Raspberry Pi scripts because that remains the closest official path that yields a **real Alexa** on a Pi. New developer-console registrations may fail — details in [`docs/AMAZON_AVS.md`](docs/AMAZON_AVS.md).
 
 ## What this is
 
 | Piece | Choice |
 | --- | --- |
 | Wake word | openWakeWord (`alexa`) — free/open; Porcupine optional (paid) |
-| Voice assistant | **Amazon AVS Device SDK SampleApp** (default) |
+| Voice assistant | **Amazon AVS Device SDK SampleApp v3.0.0** (default) |
 | Boot | systemd `pi-voice-assistant.service` |
 | Config | `/etc/pi-voice-assistant/config.env` (no secrets in git) |
 
-On wake, the daemon sends tap-to-talk (`t`) to SampleApp. SampleApp streams audio to Alexa and plays the reply. After CBL authorization, the device is linked to your Amazon account.
+On wake, the daemon sends tap-to-talk (`t`) to SampleApp (same interaction model as the SampleApp console). SampleApp streams audio to Alexa and plays the reply. After CBL authorization (wiki “Authorize and run”), the device is linked to your Amazon account.
 
 Optional fallbacks (`BACKEND=conversation` or `command`) exist for bring-up without AVS; they are **not** real Alexa.
 
 ## Hardware
+
+Aligned with the SDK wiki Raspberry Pi guides (updated for current boards):
 
 - Raspberry Pi 3 / 4 / 5 (Bookworm 64-bit recommended; Pi 4/5 preferred)
 - USB microphone (or capture HAT)
@@ -47,23 +61,29 @@ Optional fallbacks (`BACKEND=conversation` or `command`) exist for bring-up with
 
 ## Amazon developer console (before or during install)
 
-Full step-by-step: [`docs/AMAZON_AVS.md`](docs/AMAZON_AVS.md).
-
-Summary:
+Full step-by-step: [`docs/AMAZON_AVS.md`](docs/AMAZON_AVS.md). Summary from the wiki registration flow:
 
 1. Sign in at [developer.amazon.com](https://developer.amazon.com/)
 2. If still available to your account, register an AVS / Alexa Built-in product and Login with Amazon security profile
-3. Download `config.json` (`clientId`, `productId`) — keep it private
+3. Download `config.json` in the official shape:
+
+```json
+{
+  "deviceInfo": {
+    "clientId": "amzn1.application-oa2-client....",
+    "productId": "YourProductId"
+  }
+}
+```
+
 4. Run `./install.sh` and point it at that file (or paste the IDs when prompted)
 5. When SampleApp shows a code, open [amazon.com/us/code](https://amazon.com/us/code), Allow, wait until Alexa is idle
 6. Use the [Alexa app](https://www.amazon.com/alexa-app/b?ie=UTF8&node=18354642011) / [alexa.amazon.com](https://alexa.amazon.com/) with the same Amazon account
 
-Official / historical references:
+Related Amazon pages:
 
-- [Alexa Built-in / AVS overview](https://developer.amazon.com/en-US/alexa/alexa-voice-service) (includes “no longer generally available” notice)
+- [Alexa Built-in / AVS overview](https://developer.amazon.com/en-US/alexa/alexa-voice-service) (“no longer generally available” notice)
 - [AVS FAQs](https://developer.amazon.com/en-US/docs/alexa/alexa-voice-service/faqs.html)
-- [avs-device-sdk (archived)](https://github.com/alexa/avs-device-sdk)
-- [Raspberry Pi Quick Start (SDK wiki)](https://github.com/alexa/avs-device-sdk/wiki/Raspberry-Pi-Quick-Start-Guide-with-Script)
 - [Works with Alexa](https://developer.amazon.com/en-US/alexa/works-with-alexa) — **not** Alexa Built-in; for devices Alexa controls
 
 ## Configuration
@@ -85,10 +105,10 @@ Primary file: `/etc/pi-voice-assistant/config.env` (see [`config.example.env`](c
 # Python daemon only (no AVS build)
 ./scripts/install.sh
 
-# Build SampleApp from an existing config.json
+# Build SampleApp from an existing config.json (pins SDK v3.0.0)
 ./scripts/install-avs-sdk.sh /secure/path/to/config.json
 
-# One-time Amazon authorization
+# One-time Amazon authorization (wiki CBL flow)
 ./scripts/authorize-avs.sh
 
 # Enable/restart boot service
@@ -100,7 +120,7 @@ export PYTHONPATH="$PWD"
 python -m pi_voice_assistant --env-file /etc/pi-voice-assistant/config.env --validate-config
 ```
 
-Installer knobs: `SKIP_AVS_BUILD=1`, `SKIP_AUTHORIZE=1`, `SKIP_SERVICE=1`, `AVS_DIR=...`, `AVS_CONFIG_JSON=/path/to/config.json`.
+Installer knobs: `SKIP_AVS_BUILD=1`, `SKIP_AUTHORIZE=1`, `SKIP_SERVICE=1`, `AVS_DIR=...`, `AVS_SDK_VERSION=v3.0.0`, `AVS_CONFIG_JSON=/path/to/config.json`.
 
 ## Project layout
 
@@ -109,7 +129,7 @@ install.sh                 One-command installer
 pi_voice_assistant/        Wake-word daemon (Python)
 scripts/                   install.sh, install-avs-sdk.sh, authorize-avs.sh, install-service.sh
 systemd/                   service unit template
-docs/AMAZON_AVS.md         Amazon console + AVS status
+docs/AMAZON_AVS.md         Amazon console + AVS status + wiki citations
 assets/startup.wav         Ready chime
 config.example.env         Config template
 tests/                     Unit tests
@@ -131,16 +151,16 @@ ruff check pi_voice_assistant tests
 | --- | --- |
 | Console won’t create an AVS product | Amazon closed new AVS tools; see `docs/AMAZON_AVS.md` |
 | SampleApp build fails on Bookworm | SDK unmaintained since 2024; inspect `~/avs-sdk` build logs; `PLATFORM="Raspberry pi"` is forced by the installer |
-| NOT YET AUTHORIZED | Run `./scripts/authorize-avs.sh` and finish `amazon.com/us/code` |
+| NOT YET AUTHORIZED | Run `./scripts/authorize-avs.sh` and finish `amazon.com/us/code` (wiki Authorize and run) |
 | No wake detections | `arecord -l`, `--list-audio-devices`, lower `WAKE_THRESHOLD` |
 | Service fails | `sudo journalctl -u pi-voice-assistant -xe`; user in `audio` group |
 
 ## Limitations
 
 - Not an Amazon-certified commercial Alexa Built-in product.
-- Depends on the **archived** AVS Device SDK; builds and cloud access are best-effort.
+- Depends on the **archived** AVS Device SDK **v3.0.0** (latest release); builds and cloud access are best-effort.
 - New AVS product registration may be impossible.
-- First authorization must use a browser (Amazon CBL).
+- First authorization must use a browser (Amazon CBL), per the official SampleApp flow.
 - Hardware, Amazon credentials, SampleApp build, CBL, and Alexa-app visibility were **not** verified in the cloud agent environment used to prepare this repo.
 
 ## License
