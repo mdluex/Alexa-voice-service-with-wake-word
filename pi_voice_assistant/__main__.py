@@ -13,7 +13,7 @@ from .daemon import configure_logging, run_from_settings
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pi-voice-assistant",
-        description="Wake-word voice assistant for Raspberry Pi (Alexa-style UX).",
+        description="Raspberry Pi wake-word daemon for real Amazon Alexa (AVS SampleApp).",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(

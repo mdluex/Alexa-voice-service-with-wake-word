@@ -33,7 +33,9 @@ def test_default_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = Settings.from_env()
     assert settings.wake_engine == "openwakeword"
     assert settings.wake_model == "alexa"
-    assert settings.backend == "conversation"
+    assert settings.backend == "avs"
+    assert settings.avs_start_script is not None
+    assert settings.avs_start_script.name == "startsample.sh"
     settings.validate()
 
 
@@ -47,7 +49,7 @@ def test_validate_porcupine_requires_key(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_validate_avs_requires_script(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BACKEND", "avs")
-    monkeypatch.delenv("AVS_START_SCRIPT", raising=False)
+    monkeypatch.setenv("AVS_START_SCRIPT", "")
     settings = Settings.from_env()
     with pytest.raises(ValueError, match="AVS_START_SCRIPT"):
         settings.validate()

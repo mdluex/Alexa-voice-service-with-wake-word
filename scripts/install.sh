@@ -57,13 +57,16 @@ PYTHONPATH="$REPO_ROOT" "$VENV_DIR/bin/python" -m pi_voice_assistant --version
 
 cat <<EOF
 
-Install complete.
+Python wake-word daemon install complete.
 
-Next steps:
-  1. Edit config:  sudo nano $CONFIG_DIR/config.env
-  2. Test mic:     PYTHONPATH=$REPO_ROOT $VENV_DIR/bin/python -m pi_voice_assistant --list-audio-devices
-  3. Dry-run cfg:  PYTHONPATH=$REPO_ROOT $VENV_DIR/bin/python -m pi_voice_assistant --env-file $CONFIG_DIR/config.env --validate-config
-  4. Run once:     PYTHONPATH=$REPO_ROOT $VENV_DIR/bin/python -m pi_voice_assistant --env-file $CONFIG_DIR/config.env
-  5. Enable boot:  $REPO_ROOT/scripts/install-service.sh
+For the full one-command flow (AVS SampleApp + authorize + systemd), prefer:
+
+  $REPO_ROOT/install.sh
+
+Manual next steps if you are not using the root installer:
+  1. ./scripts/install-avs-sdk.sh /path/to/config.json
+  2. ./scripts/authorize-avs.sh
+  3. Edit $CONFIG_DIR/config.env (BACKEND=avs, AVS_START_SCRIPT=...)
+  4. ./scripts/install-service.sh
 
 EOF

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pi-voice-assistant"
-version = "2.0.0"
-description = "Wake-word voice assistant for Raspberry Pi"
+version = "2.1.0"
+description = "Real Amazon Alexa (AVS) wake-word assistant for Raspberry Pi"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
